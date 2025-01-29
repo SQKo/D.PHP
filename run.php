@@ -22,6 +22,7 @@ ini_set('memory_limit', '-1');
 
 use Clue\React\Redis\Factory as RedisFactory;
 use Discord\Discord;
+use Discord\Helpers\CacheConfig;
 use Discord\Parts\Channel\Message;
 use Discord\Parts\Embed\Embed;
 use Discord\WebSockets\Intents;
@@ -48,8 +49,8 @@ $logger = new Logger('D.PHP');
 
 $loop = Factory::create();
 
-$redis = (new RedisFactory($loop))->createLazyClient('localhost:6379');
-$cache = new Redis($redis, 'dphp:');
+$redis = (new RedisFactory($loop))->createLazyClient($_ENV['REDIS_HOST'] ?? 'localhost:6379');
+$cache = new CacheConfig(new Redis($redis, 'dphp:'), true, true, ':');
 
 $discord = new Discord([
     'token' => $_ENV['TOKEN'],
@@ -57,8 +58,7 @@ $discord = new Discord([
     'logger' => $logger,
     'loadAllMembers' => true,
     'intents' => Intents::getDefaultIntents() | Intents::GUILD_MEMBERS | Intents::GUILD_PRESENCES,
-    'cacheInterface' => $cache,
-    'cacheSweep' => true,
+    'cache' => $cache,
 ]);
 
 $shell = new Shell($loop);
